@@ -41,16 +41,25 @@ const OnboardingModal = ({ onComplete }: OnboardingModalProps) => {
   const isLastStep = currentStep === steps.length - 1;
 
   const handleNext = async () => {
+    // Special handling for camera permission step
     if (currentStep === 1) {
-      // Request camera permission on step 2
       try {
-        await navigator.mediaDevices.getUserMedia({ video: true });
+        // Check if we're in a secure context and camera is available
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          console.log('Camera not available, proceeding anyway');
+        } else {
+          // Try to request camera permission
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          // Stop the stream immediately, we just needed permission
+          stream.getTracks().forEach(track => track.stop());
+        }
       } catch (error) {
-        alert("Ey, necesito la cámara para funcionar. Dale permiso, causa.");
-        return;
+        console.log('Camera permission denied or failed:', error);
+        // Don't block the flow, just log and continue
       }
     }
     
+    // Always proceed to next step or complete
     if (isLastStep) {
       onComplete();
     } else {
