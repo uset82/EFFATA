@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Camera, BarChart3, ArrowLeft, RotateCcw, Zap, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { analyzeProductImage, convertFileToBase64 } from "@/lib/gemini";
+import { toast } from "sonner";
 
 interface CameraScannerProps {
   onScanComplete: (data: string) => void;
@@ -12,6 +14,7 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
   const [isScanning, setIsScanning] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [scanMode, setScanMode] = useState<'barcode' | 'ingredients'>('barcode');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -60,7 +63,7 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
     setIsScanning(false);
   };
 
-  const captureImage = () => {
+  const captureImage = async () => {
     if (!videoRef.current || !canvasRef.current) return;
 
     const video = videoRef.current;
@@ -79,29 +82,42 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
     // Convert to base64 for processing
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
     
-    // Simulate processing with mock data
-    setTimeout(() => {
-      const mockData = scanMode === 'barcode' 
-        ? 'barcode:123456789' 
-        : 'ingredients:photo_captured';
-      
-      onScanComplete(mockData);
+    setIsAnalyzing(true);
+    toast.loading('Analizando la imagen con IA...');
+
+    try {
+      const analysis = await analyzeProductImage(imageData, scanMode);
+      toast.dismiss();
+      toast.success('¡Imagen analizada correctamente!');
+      onScanComplete(JSON.stringify(analysis));
       stopCamera();
-    }, 1500);
+    } catch (error) {
+      console.error('Error analyzing image:', error);
+      toast.dismiss();
+      toast.error(error instanceof Error ? error.message : 'Error al analizar la imagen');
+      setIsAnalyzing(false);
+    }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Simulate processing with mock data
-    setTimeout(() => {
-      const mockData = scanMode === 'barcode' 
-        ? 'barcode:123456789' 
-        : 'ingredients:photo_uploaded';
-      
-      onScanComplete(mockData);
-    }, 1500);
+    setIsAnalyzing(true);
+    toast.loading('Analizando la imagen con IA...');
+
+    try {
+      const imageData = await convertFileToBase64(file);
+      const analysis = await analyzeProductImage(imageData, scanMode);
+      toast.dismiss();
+      toast.success('¡Imagen analizada correctamente!');
+      onScanComplete(JSON.stringify(analysis));
+    } catch (error) {
+      console.error('Error analyzing image:', error);
+      toast.dismiss();
+      toast.error(error instanceof Error ? error.message : 'Error al analizar la imagen');
+      setIsAnalyzing(false);
+    }
 
     // Reset file input
     if (fileInputRef.current) {
@@ -219,10 +235,23 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
                     onClick={captureImage}
                     size="lg"
                     className="rounded-full h-16 w-16 p-0"
+                    disabled={isAnalyzing}
                   >
                     <Zap className="h-6 w-6" />
                   </Button>
                 </div>
+
+                {/* Analyzing overlay */}
+                {isAnalyzing && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <div className="bg-white rounded-lg p-4 text-center">
+                      <div className="animate-spin mb-2">
+                        <Zap className="h-8 w-8 mx-auto text-primary" />
+                      </div>
+                      <p className="text-sm font-medium">Analizando...</p>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>

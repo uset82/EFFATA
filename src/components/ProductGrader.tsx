@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Camera, AlertTriangle, CheckCircle, Info, Zap } from "lucide-react";
+import { ArrowLeft, Camera, AlertTriangle, CheckCircle, Info, Zap, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import type { IngredientAnalysis } from "@/lib/gemini";
 
 interface ProductGraderProps {
   productData: string;
@@ -24,6 +25,7 @@ interface GradeResult {
 const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps) => {
   const [result, setResult] = useState<GradeResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [analysis, setAnalysis] = useState<IngredientAnalysis | null>(null);
 
   // Mock grading results based on Spanish "barrio" style
   const gradeResults: Record<Grade, GradeResult> = {
@@ -95,18 +97,35 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
   };
 
   useEffect(() => {
-    // Simulate API processing
     const processProduct = async () => {
       setIsLoading(true);
       
-      // Mock processing delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      try {
+        // Parse the real analysis data from Gemini
+        const analysisData: IngredientAnalysis = JSON.parse(productData);
+        setAnalysis(analysisData);
+        
+        // Create personalized result based on real analysis
+        const gradeData = gradeResults[analysisData.grade];
+        
+        // Customize the result with real data
+        const customizedResult: GradeResult = {
+          ...gradeData,
+          details: [
+            ...analysisData.warnings.map(warning => `⚠️ ${warning}`),
+            ...analysisData.benefits.map(benefit => `✅ ${benefit}`)
+          ]
+        };
+
+        setResult(customizedResult);
+      } catch (error) {
+        console.error('Error parsing analysis data:', error);
+        // Fallback to random grade if parsing fails
+        const grades: Grade[] = ['A', 'B', 'C', 'D', 'E'];
+        const randomGrade = grades[Math.floor(Math.random() * grades.length)];
+        setResult(gradeResults[randomGrade]);
+      }
       
-      // Mock random grade generation (in real app, this would come from AI analysis)
-      const grades: Grade[] = ['A', 'B', 'C', 'D', 'E'];
-      const randomGrade = grades[Math.floor(Math.random() * grades.length)];
-      
-      setResult(gradeResults[randomGrade]);
       setIsLoading(false);
     };
 
@@ -156,6 +175,20 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
         <div className="w-16" />
       </div>
 
+      {/* Product Info */}
+      {analysis?.productName && (
+        <Card className="p-4 bg-muted/30">
+          <div className="flex items-center gap-2 mb-2">
+            <Package className="h-5 w-5 text-primary" />
+            <h4 className="font-bold">Producto</h4>
+          </div>
+          <p className="text-lg font-medium">{analysis.productName}</p>
+          {analysis.barcode && (
+            <p className="text-sm text-muted-foreground">Código: {analysis.barcode}</p>
+          )}
+        </Card>
+      )}
+
       {/* Grade Display */}
       <Card className="overflow-hidden">
         <div className={`p-8 text-center ${result.color}`}>
@@ -167,6 +200,11 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
             <h3 className="text-2xl font-bold">
               {result.title}
             </h3>
+            {analysis && (
+              <div className="text-lg opacity-90">
+                Puntuación: {analysis.healthScore}/100
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -182,6 +220,28 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
           </div>
         </div>
       </Card>
+
+      {/* Ingredients List */}
+      {analysis?.ingredients && analysis.ingredients.length > 0 && (
+        <Card className="p-6">
+          <h4 className="font-bold mb-4 flex items-center gap-2">
+            <Info className="h-5 w-5 text-primary" />
+            Ingredientes Detectados
+          </h4>
+          <div className="space-y-2">
+            {analysis.ingredients.slice(0, 10).map((ingredient, index) => (
+              <Badge key={index} variant="outline" className="mr-2 mb-2">
+                {ingredient}
+              </Badge>
+            ))}
+            {analysis.ingredients.length > 10 && (
+              <p className="text-sm text-muted-foreground">
+                Y {analysis.ingredients.length - 10} ingredientes más...
+              </p>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Details */}
       <Card className="p-6">
