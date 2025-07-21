@@ -12,10 +12,17 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: '2rem',
+			padding: '1rem',
 			screens: {
+				'sm': '375px',
+				'md': '768px',
+				'lg': '1024px',
+				'xl': '1280px',
 				'2xl': '1400px'
 			}
+		},
+		fontFamily: {
+			'sans': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
 		},
 		extend: {
 			colors: {
@@ -31,6 +38,10 @@ export default {
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -51,6 +62,13 @@ export default {
 				card: {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
+				},
+				grade: {
+					a: 'hsl(var(--grade-a))',
+					b: 'hsl(var(--grade-b))',
+					c: 'hsl(var(--grade-c))',
+					d: 'hsl(var(--grade-d))',
+					e: 'hsl(var(--grade-e))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
