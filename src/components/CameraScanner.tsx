@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Camera, BarChart3, ArrowLeft, RotateCcw, Zap } from "lucide-react";
+import { Camera, BarChart3, ArrowLeft, RotateCcw, Zap, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -15,6 +15,7 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     return () => {
@@ -89,6 +90,29 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
     }, 1500);
   };
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Simulate processing with mock data
+    setTimeout(() => {
+      const mockData = scanMode === 'barcode' 
+        ? 'barcode:123456789' 
+        : 'ingredients:photo_uploaded';
+      
+      onScanComplete(mockData);
+    }, 1500);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleBack = () => {
     stopCamera();
     onBack();
@@ -138,14 +162,20 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
             </h3>
             <p className="text-muted-foreground mb-6">
               {scanMode === 'barcode' 
-                ? 'Apunta al código de barras del producto'
-                : 'Toma una foto clara de la lista de ingredientes'
+                ? 'Apunta al código de barras del producto o sube una foto'
+                : 'Toma una foto clara de los ingredientes o sube una existente'
               }
             </p>
-            <Button onClick={startCamera} className="font-bold">
-              <Camera className="mr-2 h-4 w-4" />
-              Activar Cámara
-            </Button>
+            <div className="flex gap-3">
+              <Button onClick={startCamera} className="font-bold">
+                <Camera className="mr-2 h-4 w-4" />
+                Cámara
+              </Button>
+              <Button onClick={triggerFileUpload} variant="outline" className="font-bold">
+                <Upload className="mr-2 h-4 w-4" />
+                Subir Foto
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="relative">
@@ -215,6 +245,13 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
       </Card>
 
       <canvas ref={canvasRef} className="hidden" />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
     </div>
   );
 };
