@@ -1,0 +1,90 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Professional gradient background -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8f9fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e9ecef;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Hair gradient - darker, more realistic -->
+    <linearGradient id="hairGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d0d0d;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Skin gradient - more accurate tone -->
+    <linearGradient id="skinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4a574;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c19660;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Suit gradient -->
+    <linearGradient id="suitGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d0d0d;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Tie gradient - blue like original -->
+    <linearGradient id="tieGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="32" fill="url(#bgGradient)"/>
+  
+  <!-- Suit jacket - broader shoulders -->
+  <path d="M10 42 Q14 36 18 38 L18 52 Q18 60 32 60 Q46 60 46 52 L46 38 Q50 36 54 42 L54 64 L10 64 Z" fill="url(#suitGradient)"/>
+  
+  <!-- Shirt -->
+  <path d="M20 38 Q24 36 32 36 Q40 36 44 38 L44 52 Q44 58 32 58 Q20 58 20 52 Z" fill="#ffffff"/>
+  
+  <!-- Tie - more prominent -->
+  <path d="M29 38 Q32 36 35 38 L35 54 Q35 56 32 56 Q29 56 29 54 Z" fill="url(#tieGradient)"/>
+  
+  <!-- Face - rounder, more accurate -->
+  <ellipse cx="32" cy="26" rx="13" ry="15" fill="url(#skinGradient)"/>
+  
+  <!-- Hair - fuller, more realistic style -->
+  <path d="M19 20 Q19 8 32 8 Q45 8 45 20 Q45 16 43 14 Q38 12 32 12 Q26 12 21 14 Q19 16 19 20" fill="url(#hairGradient)"/>
+  
+  <!-- Hair sides - fuller -->
+  <path d="M19 20 Q16 22 16 26 Q16 30 19 34 Q21 32 21 28 Q21 22 19 20" fill="url(#hairGradient)"/>
+  <path d="M45 20 Q48 22 48 26 Q48 30 45 34 Q43 32 43 28 Q43 22 45 20" fill="url(#hairGradient)"/>
+  
+  <!-- Forehead hair line -->
+  <path d="M21 18 Q26 16 32 16 Q38 16 43 18 Q40 17 32 17 Q24 17 21 18" fill="url(#hairGradient)"/>
+  
+  <!-- Eyes - more realistic positioning -->
+  <ellipse cx="27" cy="24" rx="2.5" ry="2" fill="#2c1810"/>
+  <ellipse cx="37" cy="24" rx="2.5" ry="2" fill="#2c1810"/>
+  
+  <!-- Eye highlights -->
+  <ellipse cx="27.5" cy="23.5" rx="0.8" ry="0.8" fill="#ffffff"/>
+  <ellipse cx="37.5" cy="23.5" rx="0.8" ry="0.8" fill="#ffffff"/>
+  
+  <!-- Eyebrows - thicker, more defined -->
+  <path d="M24 21 Q27 20 30 21" stroke="#1a1a1a" stroke-width="1.5" fill="none"/>
+  <path d="M34 21 Q37 20 40 21" stroke="#1a1a1a" stroke-width="1.5" fill="none"/>
+  
+  <!-- Nose - more defined -->
+  <path d="M32 26 Q33 28 32 30 Q31 28 32 26" fill="#b8956a"/>
+  <ellipse cx="31" cy="29" rx="0.5" ry="0.3" fill="#a67c52"/>
+  <ellipse cx="33" cy="29" rx="0.5" ry="0.3" fill="#a67c52"/>
+  
+  <!-- Mouth - more natural -->
+  <path d="M28 32 Q32 34 36 32" stroke="#8b6f47" stroke-width="1.2" fill="none"/>
+  
+  <!-- Facial structure - jawline -->
+  <path d="M22 32 Q24 36 28 38 Q32 39 36 38 Q40 36 42 32" stroke="#b8956a" stroke-width="0.5" fill="none" opacity="0.3"/>
+  
+  <!-- Collar - more realistic -->
+  <path d="M20 38 Q24 34 32 34 Q40 34 44 38 L42 40 Q38 36 32 36 Q26 36 22 40 Z" fill="#ffffff" stroke="#e5e5e5" stroke-width="0.5"/>
+  
+  <!-- Tie knot -->
+  <path d="M30 36 Q32 34 34 36 L34 40 Q32 42 30 40 Z" fill="url(#tieGradient)"/>
+  
+  <!-- Professional shadow -->
+  <ellipse cx="32" cy="60" rx="22" ry="4" fill="#000000" opacity="0.1"/>
+</svg>

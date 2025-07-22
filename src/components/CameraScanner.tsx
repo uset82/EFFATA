@@ -169,25 +169,25 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
       </div>
 
       {/* Camera View */}
-      <Card className="relative overflow-hidden">
+      <Card className="relative overflow-hidden max-w-xl mx-auto">
         {!isScanning ? (
           <div className="aspect-[4/3] bg-muted/20 flex flex-col items-center justify-center p-8 text-center">
-            <Camera className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-bold mb-2">
+            <Camera className="h-16 w-16 md:h-20 md:w-20 text-muted-foreground mb-4" />
+            <h3 className="text-lg md:text-xl font-bold mb-2">
               {scanMode === 'barcode' ? 'Buscar código de barras' : 'Fotografiar ingredientes'}
             </h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-6 md:text-lg">
               {scanMode === 'barcode' 
                 ? 'Apunta al código de barras del producto o sube una foto'
                 : 'Toma una foto clara de los ingredientes o sube una existente'
               }
             </p>
-            <div className="flex gap-3">
-              <Button onClick={startCamera} className="font-bold">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button onClick={startCamera} className="font-bold w-full sm:w-auto">
                 <Camera className="mr-2 h-4 w-4" />
                 Cámara
               </Button>
-              <Button onClick={triggerFileUpload} variant="outline" className="font-bold">
+              <Button onClick={triggerFileUpload} variant="outline" className="font-bold w-full sm:w-auto">
                 <Upload className="mr-2 h-4 w-4" />
                 Subir Foto
               </Button>

@@ -3,6 +3,8 @@ import { ArrowLeft, Camera, AlertTriangle, CheckCircle, Info, Zap, Package } fro
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { IngredientAnalysis } from "@/lib/gemini";
 
 interface ProductGraderProps {
@@ -26,6 +28,8 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
   const [result, setResult] = useState<GradeResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [analysis, setAnalysis] = useState<IngredientAnalysis | null>(null);
+  
+  const isMobile = useIsMobile();
 
   // Mock grading results based on Spanish "barrio" style
   const gradeResults: Record<Grade, GradeResult> = {
@@ -101,14 +105,11 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
       setIsLoading(true);
       
       try {
-        // Parse the real analysis data from Gemini
         const analysisData: IngredientAnalysis = JSON.parse(productData);
         setAnalysis(analysisData);
         
-        // Create personalized result based on real analysis
         const gradeData = gradeResults[analysisData.grade];
         
-        // Customize the result with real data
         const customizedResult: GradeResult = {
           ...gradeData,
           details: [
@@ -120,7 +121,6 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
         setResult(customizedResult);
       } catch (error) {
         console.error('Error parsing analysis data:', error);
-        // Fallback to random grade if parsing fails
         const grades: Grade[] = ['A', 'B', 'C', 'D', 'E'];
         const randomGrade = grades[Math.floor(Math.random() * grades.length)];
         setResult(gradeResults[randomGrade]);
@@ -134,23 +134,23 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
 
   if (isLoading) {
     return (
-      <div className="space-y-6 mt-4">
+      <div className="p-4 space-y-6">
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={onBack}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Atrás
           </Button>
-          <h2 className="text-xl font-bold">Analizando...</h2>
+          <h2 className="text-lg font-bold">Analizando...</h2>
           <div className="w-16" />
         </div>
 
-        <Card className="p-8">
-          <div className="text-center space-y-6">
+        <Card className="p-6">
+          <div className="text-center space-y-4">
             <div className="animate-spin">
-              <Zap className="h-16 w-16 mx-auto text-primary" />
+              <Zap className="h-12 w-12 mx-auto text-primary" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold mb-2">Revisando el producto...</h3>
+              <h3 className="text-xl font-bold mb-2">Revisando el producto...</h3>
               <p className="text-muted-foreground">
                 Déjame ver qué onda con este producto, causa. Revisando ingredientes...
               </p>
@@ -164,20 +164,20 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
   if (!result) return null;
 
   return (
-    <div className="space-y-6 mt-4">
+    <div className="p-2 space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Atrás
         </Button>
-        <h2 className="text-xl font-bold">Resultado</h2>
+        <h2 className="text-lg font-bold">Resultado</h2>
         <div className="w-16" />
       </div>
 
       {/* Product Info */}
       {analysis?.productName && (
-        <Card className="p-4 bg-muted/30">
+        <Card className="p-3 bg-muted/30">
           <div className="flex items-center gap-2 mb-2">
             <Package className="h-5 w-5 text-primary" />
             <h4 className="font-bold">Producto</h4>
@@ -191,18 +191,35 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
 
       {/* Grade Display */}
       <Card className="overflow-hidden">
-        <div className={`p-8 text-center ${result.color}`}>
-          <div className="space-y-4">
+        <div className={`p-4 text-center ${result.color}`}>
+          <div className="space-y-2">
             {result.icon}
-            <div className="text-6xl font-black">
-              {result.grade}
+            <div className="text-6xl font-black">{result.grade}</div>
+            <h3 className="text-xl font-bold">{result.title}</h3>
+            
+            {/* Explicación de la categoría */}
+            <div className="text-sm opacity-90 bg-black/10 rounded-lg p-2 mt-2">
+              <div className="font-medium mb-1">Categoría {result.grade} de 5 niveles:</div>
+              <div className="text-xs">
+                {result.grade === 'A' && 'A = Excelente • B = Bueno • C = Regular • D = Malo • E = Muy malo'}
+                {result.grade === 'B' && 'A = Excelente • B = Bueno • C = Regular • D = Malo • E = Muy malo'}
+                {result.grade === 'C' && 'A = Excelente • B = Bueno • C = Regular • D = Malo • E = Muy malo'}
+                {result.grade === 'D' && 'A = Excelente • B = Bueno • C = Regular • D = Malo • E = Muy malo'}
+                {result.grade === 'E' && 'A = Excelente • B = Bueno • C = Regular • D = Malo • E = Muy malo'}
+              </div>
             </div>
-            <h3 className="text-2xl font-bold">
-              {result.title}
-            </h3>
+
             {analysis && (
-              <div className="text-lg opacity-90">
-                Puntuación: {analysis.healthScore}/100
+              <div className="bg-black/10 rounded-lg p-2 mt-2">
+                <div className="text-base font-medium">
+                  Puntuación: {analysis.healthScore}/100
+                </div>
+                <div className="text-xs opacity-90 mt-1">
+                  {analysis.healthScore >= 80 && 'Muy saludable - Consume sin preocupación'}
+                  {analysis.healthScore >= 60 && analysis.healthScore < 80 && 'Moderadamente saludable - Consumo ocasional'}
+                  {analysis.healthScore >= 40 && analysis.healthScore < 60 && 'Poco saludable - Limita su consumo'}
+                  {analysis.healthScore < 40 && 'Nada saludable - Evita este producto'}
+                </div>
               </div>
             )}
           </div>
@@ -210,85 +227,42 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
       </Card>
 
       {/* Message */}
-      <Card className="p-6">
-        <div className="space-y-4">
-          <div className="flex items-start gap-3">
-            <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-            <p className="text-lg leading-relaxed">
-              {result.message}
-            </p>
-          </div>
+      <Card className="p-3">
+        <div className="flex items-start gap-3">
+          <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+          <p className="text-base leading-relaxed">{result.message}</p>
         </div>
       </Card>
 
-      {/* Ingredients List */}
-      {analysis?.ingredients && analysis.ingredients.length > 0 && (
-        <Card className="p-6">
-          <h4 className="font-bold mb-4 flex items-center gap-2">
-            <Info className="h-5 w-5 text-primary" />
-            Ingredientes Detectados
-          </h4>
-          <div className="space-y-2">
-            {analysis.ingredients.slice(0, 10).map((ingredient, index) => (
-              <Badge key={index} variant="outline" className="mr-2 mb-2">
-                {ingredient}
-              </Badge>
-            ))}
-            {analysis.ingredients.length > 10 && (
-              <p className="text-sm text-muted-foreground">
-                Y {analysis.ingredients.length - 10} ingredientes más...
-              </p>
-            )}
-          </div>
-        </Card>
-      )}
-
       {/* Details */}
-      <Card className="p-6">
-        <h4 className="font-bold mb-4 flex items-center gap-2">
+      <Card className="p-3">
+        <h4 className="font-bold mb-3 flex items-center gap-2">
           <CheckCircle className="h-5 w-5 text-primary" />
           ¿Por qué esta calificación?
         </h4>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {result.details.map((detail, index) => (
             <div key={index} className="flex items-start gap-3">
               <div className={`h-2 w-2 rounded-full mt-2 flex-shrink-0 ${
-                result.grade <= 'B' ? 'bg-secondary' : 
-                result.grade === 'C' ? 'bg-warning' : 'bg-destructive'
+                result.grade <= 'B' ? 'bg-green-500' : 
+                result.grade === 'C' ? 'bg-yellow-500' : 'bg-red-500'
               }`} />
-              <p className="text-sm text-muted-foreground">{detail}</p>
+              <p className="text-sm">{detail}</p>
             </div>
           ))}
         </div>
       </Card>
 
       {/* Actions */}
-      <div className="space-y-3">
-        <Button 
-          onClick={onScanAgain} 
-          className="w-full font-bold"
-          size="lg"
-        >
+      <div className="space-y-3 pt-1">
+        <Button onClick={onScanAgain} className="w-full font-bold">
           <Camera className="mr-2 h-5 w-5" />
           Escanear Otro Producto
         </Button>
-        
-        <Button 
-          variant="outline" 
-          onClick={onBack}
-          className="w-full"
-        >
+        <Button variant="outline" onClick={onBack} className="w-full">
           Volver al Inicio
         </Button>
       </div>
-
-      {/* Disclaimer */}
-      <Card className="p-4 bg-muted/30">
-        <p className="text-xs text-muted-foreground text-center">
-          Esta calificación es referencial. Siempre consulta con profesionales de salud 
-          para dietas específicas, causa.
-        </p>
-      </Card>
     </div>
   );
 };

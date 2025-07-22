@@ -12,13 +12,17 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: '1rem',
+			padding: {
+				DEFAULT: '1rem',
+				md: '1.5rem',
+				lg: '2rem'
+			},
 			screens: {
-				'sm': '375px',
+				'sm': '640px',   // Aumentado desde 375px
 				'md': '768px',
 				'lg': '1024px',
 				'xl': '1280px',
-				'2xl': '1400px'
+				'2xl': '1536px'  // Aumentado desde 1400px
 			}
 		},
 		fontFamily: {
