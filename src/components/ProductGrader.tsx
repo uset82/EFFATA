@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Camera, AlertTriangle, CheckCircle, Info, Zap, Package } from "lucide-react";
+import { ArrowLeft, Camera, Info, Zap, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,7 @@ interface GradeResult {
   message: string;
   details: string[];
   color: string;
-  icon: React.ReactNode;
+  emoji: string;
 }
 
 const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps) => {
@@ -31,7 +31,7 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
   
   const isMobile = useIsMobile();
 
-  // Mock grading results based on Spanish "barrio" style
+  // Mock grading results based on Spanish "barrio" style with emoji faces
   const gradeResults: Record<Grade, GradeResult> = {
     'A': {
       grade: 'A',
@@ -44,7 +44,7 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
         'Rico en vitaminas y minerales'
       ],
       color: 'bg-grade-a text-white',
-      icon: <CheckCircle className="h-8 w-8" />
+      emoji: '😍'
     },
     'B': {
       grade: 'B',
@@ -57,7 +57,7 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
         'Decente para consumo regular'
       ],
       color: 'bg-grade-b text-white',
-      icon: <CheckCircle className="h-8 w-8" />
+      emoji: '😊'
     },
     'C': {
       grade: 'C',
@@ -70,7 +70,7 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
         'Mejor buscar alternativas'
       ],
       color: 'bg-grade-c text-black',
-      icon: <AlertTriangle className="h-8 w-8" />
+      emoji: '😐'
     },
     'D': {
       grade: 'D',
@@ -83,7 +83,7 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
         'Mejor evítalo seguido'
       ],
       color: 'bg-grade-d text-white',
-      icon: <AlertTriangle className="h-8 w-8" />
+      emoji: '😟'
     },
     'E': {
       grade: 'E',
@@ -96,7 +96,7 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
         'Ni para el perro, causa'
       ],
       color: 'bg-grade-e text-white',
-      icon: <AlertTriangle className="h-8 w-8" />
+      emoji: '🤢'
     }
   };
 
@@ -193,19 +193,18 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
       <Card className="overflow-hidden">
         <div className={`p-4 text-center ${result.color}`}>
           <div className="space-y-2">
-            {result.icon}
-            <div className="text-6xl font-black">{result.grade}</div>
+            {/* Emoji centrado con letra en esquina derecha */}
+            <div className="relative">
+              <div className="text-8xl">{result.emoji}</div>
+              <div className="absolute top-0 right-4 text-3xl font-black">{result.grade}</div>
+            </div>
             <h3 className="text-xl font-bold">{result.title}</h3>
             
             {/* Explicación de la categoría */}
             <div className="text-sm opacity-90 bg-black/10 rounded-lg p-2 mt-2">
               <div className="font-medium mb-1">Categoría {result.grade} de 5 niveles:</div>
-              <div className="text-xs">
-                {result.grade === 'A' && 'A = Excelente • B = Bueno • C = Regular • D = Malo • E = Muy malo'}
-                {result.grade === 'B' && 'A = Excelente • B = Bueno • C = Regular • D = Malo • E = Muy malo'}
-                {result.grade === 'C' && 'A = Excelente • B = Bueno • C = Regular • D = Malo • E = Muy malo'}
-                {result.grade === 'D' && 'A = Excelente • B = Bueno • C = Regular • D = Malo • E = Muy malo'}
-                {result.grade === 'E' && 'A = Excelente • B = Bueno • C = Regular • D = Malo • E = Muy malo'}
+              <div className="text-xs flex justify-center items-center gap-1 flex-wrap">
+                <span>😍A</span> • <span>😊B</span> • <span>😐C</span> • <span>😟D</span> • <span>🤢E</span>
               </div>
             </div>
 
@@ -237,7 +236,7 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
       {/* Details */}
       <Card className="p-3">
         <h4 className="font-bold mb-3 flex items-center gap-2">
-          <CheckCircle className="h-5 w-5 text-primary" />
+          <span className="text-lg">{result.emoji}</span>
           ¿Por qué esta calificación?
         </h4>
         <div className="space-y-2">
