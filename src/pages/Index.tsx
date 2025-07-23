@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Camera, Zap, Info, User, Mail } from "lucide-react";
+import { Camera, Shield, Info, User, Mail, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -33,44 +33,44 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-primary text-primary-foreground p-4 shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Header with Glassy Effect */}
+      <header className="bg-black/20 backdrop-blur-xl border-b border-white/10 text-white p-4 shadow-2xl">
         <div className="flex items-center justify-between max-w-sm mx-auto">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer group">
-                <Zap className="h-8 w-8 group-hover:animate-pulse" />
-                <h1 className="text-2xl font-black group-hover:scale-105 transition-transform">
-                  Trágatelo
+              <button className="flex items-center gap-2 hover:opacity-80 transition-all duration-300 cursor-pointer group">
+                <Eye className="h-8 w-8 group-hover:animate-pulse text-emerald-400" />
+                <h1 className="text-2xl font-black group-hover:scale-105 transition-transform bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+                  EFFATA
                 </h1>
               </button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="max-w-md">
+            <AlertDialogContent className="max-w-md bg-slate-900/95 backdrop-blur-xl border border-white/20">
               <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2 text-xl">
-                  <User className="h-6 w-6 text-primary" />
+                <AlertDialogTitle className="flex items-center gap-2 text-xl text-white">
+                  <User className="h-6 w-6 text-emerald-400" />
                   Información del Desarrollador
                 </AlertDialogTitle>
                 <AlertDialogDescription asChild>
                   <div className="space-y-4 text-left">
-                    <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-4 rounded-lg">
-                      <h3 className="font-bold text-lg text-foreground mb-2">Carlos Carpio</h3>
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="bg-gradient-to-r from-emerald-500/20 to-blue-500/20 p-4 rounded-lg border border-white/10">
+                      <h3 className="font-bold text-lg text-white mb-2">Carlos Carpio</h3>
+                      <div className="flex items-center gap-2 text-slate-300">
                         <Mail className="h-4 w-4" />
                         <span className="text-sm">uset82@gmail.com</span>
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-slate-300">
                       <p>
-                        Desarrollador de <span className="font-bold text-primary">Trágatelo</span>, 
-                        la app que te ayuda a descubrir la verdad sobre lo que comes.
+                        Creador de <span className="font-bold text-emerald-400">EFFATA</span>, 
+                        el escáner universal de salud y seguridad de productos que protege lo que toca tu cuerpo.
                       </p>
                     </div>
                   </div>
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogAction className="w-full">
+              <AlertDialogAction className="w-full bg-emerald-600 hover:bg-emerald-700">
                 Cerrar
               </AlertDialogAction>
             </AlertDialogContent>
@@ -80,9 +80,9 @@ const Index = () => {
               variant="outline" 
               size="sm"
               onClick={resetApp}
-              className="border-2 border-yellow-300 text-yellow-300 hover:bg-yellow-300 hover:text-primary font-bold"
+              className="border-2 border-emerald-400/50 text-emerald-400 hover:bg-emerald-400/20 hover:border-emerald-400 font-bold backdrop-blur-sm"
             >
-              Nuevo
+              Nuevo Escaneo
             </Button>
           )}
         </div>
@@ -93,45 +93,94 @@ const Index = () => {
         {appState === 'welcome' && (
           <div className="space-y-6 mt-8 max-w-lg mx-auto">
             <div className="text-center space-y-4">
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground">
-                ¿Te lo vas a<br />
-                <span className="text-primary">tragar</span>?
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white">
+                Abre los ojos a<br />
+                <span className="bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+                  lo que te toca
+                </span>
               </h2>
-              <p className="text-lg md:text-xl text-muted-foreground font-medium">
-                Descubre la verdad sobre lo que comes, causa
+              <p className="text-lg md:text-xl text-slate-300 font-medium">
+                Escanea y analiza instantáneamente cualquier producto para detectar riesgos de salud y seguridad
               </p>
             </div>
 
-            <Card className="p-6 md:p-8 bg-gradient-to-br from-primary/10 to-accent/10 border-2">
+            <Card className="p-6 md:p-8 bg-black/30 backdrop-blur-xl border border-white/20 shadow-2xl">
               <div className="text-center space-y-4">
-                <Camera className="h-16 w-16 md:h-20 md:w-20 mx-auto text-primary" />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-blue-400/20 rounded-full blur-xl"></div>
+                  <Shield className="h-16 w-16 md:h-20 md:w-20 mx-auto text-emerald-400 relative z-10" />
+                </div>
                 <div>
-                  <h3 className="text-xl md:text-2xl font-bold mb-2">¡Dale, escanéalo!</h3>
-                  <p className="text-muted-foreground mb-4 md:text-lg">
-                    Apunta la cámara al código de barras o toma una foto de los ingredientes
+                  <h3 className="text-xl md:text-2xl font-bold mb-2 text-white">Escanea Cualquier Producto</h3>
+                  <p className="text-slate-300 mb-4 md:text-lg">
+                    Comida, cosméticos, cremas, pasta de dientes - cualquier cosa que toque tu cuerpo
                   </p>
                 </div>
                 <Button 
                   onClick={() => setAppState('camera')}
-                  className="w-full text-lg font-bold py-6"
+                  className="w-full text-lg font-bold py-6 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 shadow-lg"
                   size="lg"
                 >
                   <Camera className="mr-2 h-5 w-5" />
-                  Escanear Producto
+                  Comenzar Escaneo
                 </Button>
               </div>
             </Card>
 
-            <div className="bg-muted/50 p-4 rounded-lg">
+            {/* Product Categories */}
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="p-4 bg-black/20 backdrop-blur-xl border border-white/10">
+                <div className="text-center">
+                  <div className="text-2xl mb-2">🍎</div>
+                  <p className="text-sm font-medium text-white">Comida y Bebidas</p>
+                  <p className="text-xs text-slate-400">Números E, aditivos</p>
+                </div>
+              </Card>
+              <Card className="p-4 bg-black/20 backdrop-blur-xl border border-white/10">
+                <div className="text-center">
+                  <div className="text-2xl mb-2">💄</div>
+                  <p className="text-sm font-medium text-white">Cosméticos</p>
+                  <p className="text-xs text-slate-400">Ingredientes INCI</p>
+                </div>
+              </Card>
+              <Card className="p-4 bg-black/20 backdrop-blur-xl border border-white/10">
+                <div className="text-center">
+                  <div className="text-2xl mb-2">🧴</div>
+                  <p className="text-sm font-medium text-white">Cuidado Personal</p>
+                  <p className="text-xs text-slate-400">Cremas, aceites, lociones</p>
+                </div>
+              </Card>
+              <Card className="p-4 bg-black/20 backdrop-blur-xl border border-white/10">
+                <div className="text-center">
+                  <div className="text-2xl mb-2">🦷</div>
+                  <p className="text-sm font-medium text-white">Cuidado Bucal</p>
+                  <p className="text-xs text-slate-400">Pasta dental, enjuague</p>
+                </div>
+              </Card>
+            </div>
+
+            <div className="bg-black/20 backdrop-blur-xl p-4 rounded-lg border border-white/10">
               <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
+                <Info className="h-5 w-5 text-emerald-400 mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
-                  <p className="font-semibold mb-1">¿Cómo funciona?</p>
-                  <p className="text-muted-foreground">
-                    Te decimos si el producto es una joya o una porquería. 
-                    Calificación de A (buenazo) a E (ni lo mires, causa).
+                  <p className="font-semibold mb-1 text-white">Cómo funciona</p>
+                  <p className="text-slate-300">
+                    El análisis con IA califica productos de A (excelente) a E (evitar). 
+                    Verificamos carcinógenos, alérgenos, ingredientes prohibidos y toxicidad.
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Grade Legend */}
+            <div className="bg-black/20 backdrop-blur-xl p-4 rounded-lg border border-white/10">
+              <p className="text-center text-sm font-semibold text-white mb-3">Escala de Calificación</p>
+              <div className="flex justify-center gap-2 text-xs">
+                <span className="px-2 py-1 rounded bg-green-600/80 text-white">😍 A</span>
+                <span className="px-2 py-1 rounded bg-green-500/80 text-white">😊 B</span>
+                <span className="px-2 py-1 rounded bg-yellow-500/80 text-black">😐 C</span>
+                <span className="px-2 py-1 rounded bg-orange-500/80 text-white">😟 D</span>
+                <span className="px-2 py-1 rounded bg-red-600/80 text-white">🤢 E</span>
               </div>
             </div>
           </div>

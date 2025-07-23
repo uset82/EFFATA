@@ -1,26 +1,70 @@
-# Welcome to your Lovable project
+# EFFATA - Universal Product Health & Safety Scanner
 
-## Project info
+**Open your eyes to what touches you.**
 
-**URL**: https://lovable.dev/projects/f8c4a2c7-9e22-4d19-b020-9870871e0547
+EFFATA is a next-generation web application designed to help users make safer decisions about any product that could touch their skin, enter their mouth, or be absorbed by their body. The app leverages advanced AI (Gemini 2.5) to instantly scan, analyze, and rate everything from food to cosmetics, creams, oils, toothpaste, and other personal care products.
 
-## How can I edit this code?
+## 🎯 Core Mission
 
-There are several ways of editing your application.
+EFFATA acts as a real-time guardian for your health, helping you avoid cancerous, toxic, allergenic, or banned ingredients—before you eat, apply, or buy.
 
-**Use Lovable**
+## 🔍 What We Scan
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f8c4a2c7-9e22-4d19-b020-9870871e0547) and start prompting.
+- **Food & Beverages** - Processed foods, additives, E-numbers, preservatives
+- **Makeup & Cosmetics** - INCI-listed ingredients, colorants, fragrances, parabens
+- **Personal Care** - Creams, oils, lotions, serums (body, face, hair)
+- **Oral Care** - Toothpaste, mouthwash, whitening products
+- **Any Product** - That can be eaten, applied to skin, or enter the body
 
-Changes made via Lovable will be committed automatically to this repo.
+## ✨ Key Features
 
-**Use your preferred IDE**
+### 🤖 AI-Powered Analysis
+- **Gemini 2.5 Vision API** for advanced image understanding
+- Real-time ingredient extraction and recognition
+- Cross-reference with global regulatory databases
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 🏆 Smart Grading System
+- **A-E Grade Scale** with emoji visualization
+- 😍 A = Excellent (all ingredients safe)
+- 😊 B = Good (mostly safe, minor concerns)
+- 😐 C = Average (mixed safety profile)
+- 😟 D = Bad (multiple safety concerns)
+- 🤢 E = Very Bad (dangerous/banned ingredients)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 🔒 Privacy-First Design
+- **No photo storage** unless user consents
+- **End-to-end encrypted** communication
+- **GDPR/CCPA compliant** data handling
+- **Local processing** when possible
 
-Follow these steps:
+### 🎨 Modern UI/UX
+- **iOS 18 inspired** glassy dark mode design
+- **Responsive** mobile-first interface
+- **Smooth animations** and haptic feedback
+- **Accessibility focused** with high contrast
+
+## 🚀 Technology Stack
+
+### Frontend
+- **React 18** with TypeScript
+- **Vite** for fast development and building
+- **Tailwind CSS** for styling
+- **Shadcn/ui** for component library
+- **React Router** for navigation
+- **TanStack Query** for state management
+
+### AI & Analysis
+- **Google Gemini 2.5 Flash** for image analysis
+- **Advanced prompting** for ingredient recognition
+- **Multi-language support** for global products
+
+### Scanning Capabilities
+- **Camera integration** for real-time scanning
+- **Barcode recognition** for product identification
+- **Ingredient label OCR** for text extraction
+- **File upload** for existing photos
+
+## 🏗️ Project Structure
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.

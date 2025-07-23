@@ -1,8 +1,9 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "effata-health-scanner",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "EFFATA - Universal Product Health & Safety Scanner",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

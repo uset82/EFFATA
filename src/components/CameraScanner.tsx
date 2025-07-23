@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from "react";
-import { Camera, BarChart3, ArrowLeft, RotateCcw, Zap, Upload } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Camera, Upload, ArrowLeft, RotateCcw, Zap, ScanLine, FileImage } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { analyzeProductImage, convertFileToBase64 } from "@/lib/gemini";
-import { toast } from "sonner";
 
 interface CameraScannerProps {
   onScanComplete: (data: string) => void;
@@ -11,59 +11,46 @@ interface CameraScannerProps {
 }
 
 const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
-  const [isScanning, setIsScanning] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [scanMode, setScanMode] = useState<'barcode' | 'ingredients'>('barcode');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    return () => {
-      // Cleanup camera stream when component unmounts
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
-
-  const startCamera = async () => {
+  const startCamera = useCallback(async () => {
     try {
-      setCameraError(null);
-      setIsScanning(true);
-      
-      const stream = await navigator.mediaDevices.getUserMedia({
+      setError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
-          facingMode: 'environment', // Use back camera
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        } 
       });
-      
-      streamRef.current = stream;
+      setCameraStream(stream);
+      setIsCameraActive(true);
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
       }
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-      setCameraError('No puedo acceder a la cámara, causa. ¿Le diste permiso?');
-      setIsScanning(false);
+    } catch (err) {
+      console.error('Error accediendo a la cámara:', err);
+      setError('No se pudo acceder a la cámara. Por favor verifica los permisos o usa la opción de subir archivo.');
     }
-  };
+  }, []);
 
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
+  const stopCamera = useCallback(() => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+      setIsCameraActive(false);
     }
-    setIsScanning(false);
-  };
+  }, [cameraStream]);
 
-  const captureImage = async () => {
+  const capturePhoto = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return;
 
     const video = videoRef.current;
@@ -72,215 +59,225 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
 
     if (!context) return;
 
-    // Set canvas dimensions to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-
-    // Draw current video frame to canvas
     context.drawImage(video, 0, 0);
 
-    // Convert to base64 for processing
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
-    
-    setIsAnalyzing(true);
-    toast.loading('Analizando la imagen con IA...');
+    await handleImageAnalysis(imageData);
+  }, [scanMode]);
 
-    try {
-      const analysis = await analyzeProductImage(imageData, scanMode);
-      toast.dismiss();
-      toast.success('¡Imagen analizada correctamente!');
-      onScanComplete(JSON.stringify(analysis));
-      stopCamera();
-    } catch (error) {
-      console.error('Error analyzing image:', error);
-      toast.dismiss();
-      toast.error(error instanceof Error ? error.message : 'Error al analizar la imagen');
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setIsAnalyzing(true);
-    toast.loading('Analizando la imagen con IA...');
-
     try {
       const imageData = await convertFileToBase64(file);
+      await handleImageAnalysis(imageData);
+    } catch (err) {
+      setError('Error procesando el archivo. Por favor inténtalo de nuevo.');
+    }
+  }, [scanMode]);
+
+  const handleImageAnalysis = async (imageData: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
       const analysis = await analyzeProductImage(imageData, scanMode);
-      toast.dismiss();
-      toast.success('¡Imagen analizada correctamente!');
       onScanComplete(JSON.stringify(analysis));
-    } catch (error) {
-      console.error('Error analyzing image:', error);
-      toast.dismiss();
-      toast.error(error instanceof Error ? error.message : 'Error al analizar la imagen');
-      setIsAnalyzing(false);
-    }
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    } catch (err) {
+      console.error('Error en análisis:', err);
+      setError('Error analizando la imagen. Por favor asegúrate de que la imagen sea clara e inténtalo de nuevo.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const triggerFileUpload = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleBack = () => {
-    stopCamera();
-    onBack();
-  };
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, [stopCamera]);
 
   return (
-    <div className="space-y-4 mt-4">
+    <div className="space-y-6 mt-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={handleBack}>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={onBack}
+          className="border-2 border-emerald-400/50 text-emerald-400 hover:bg-emerald-400/20 hover:border-emerald-400 font-bold backdrop-blur-sm"
+        >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Atrás
         </Button>
-        <h2 className="text-xl font-bold">Escanear</h2>
-        <div className="w-16" /> {/* Spacer */}
+        <h2 className="text-xl font-bold text-white">Escanear Producto</h2>
+        <div className="w-20"></div>
       </div>
 
-      {/* Mode Selection */}
-      <div className="flex gap-2">
-        <Button
-          variant={scanMode === 'barcode' ? 'default' : 'outline'}
-          onClick={() => setScanMode('barcode')}
-          className="flex-1"
-          size="sm"
-        >
-          <BarChart3 className="mr-2 h-4 w-4" />
-          Código
-        </Button>
-        <Button
-          variant={scanMode === 'ingredients' ? 'default' : 'outline'}
-          onClick={() => setScanMode('ingredients')}
-          className="flex-1"
-          size="sm"
-        >
-          <Camera className="mr-2 h-4 w-4" />
-          Ingredientes
-        </Button>
-      </div>
-
-      {/* Camera View */}
-      <Card className="relative overflow-hidden max-w-xl mx-auto">
-        {!isScanning ? (
-          <div className="aspect-[4/3] bg-muted/20 flex flex-col items-center justify-center p-8 text-center">
-            <Camera className="h-16 w-16 md:h-20 md:w-20 text-muted-foreground mb-4" />
-            <h3 className="text-lg md:text-xl font-bold mb-2">
-              {scanMode === 'barcode' ? 'Buscar código de barras' : 'Fotografiar ingredientes'}
-            </h3>
-            <p className="text-muted-foreground mb-6 md:text-lg">
-              {scanMode === 'barcode' 
-                ? 'Apunta al código de barras del producto o sube una foto'
-                : 'Toma una foto clara de los ingredientes o sube una existente'
-              }
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={startCamera} className="font-bold w-full sm:w-auto">
-                <Camera className="mr-2 h-4 w-4" />
-                Cámara
-              </Button>
-              <Button onClick={triggerFileUpload} variant="outline" className="font-bold w-full sm:w-auto">
-                <Upload className="mr-2 h-4 w-4" />
-                Subir Foto
-              </Button>
-            </div>
+      {/* Scan Mode Toggle */}
+      <Card className="p-4 bg-black/30 backdrop-blur-xl border border-white/20">
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-white text-center">Modo de Escaneo</p>
+          <div className="flex gap-2">
+            <Button
+              variant={scanMode === 'barcode' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setScanMode('barcode')}
+              className={`flex-1 ${scanMode === 'barcode' 
+                ? 'bg-emerald-600 hover:bg-emerald-700' 
+                : 'border-white/20 text-white hover:bg-white/10'
+              }`}
+            >
+              <ScanLine className="mr-2 h-4 w-4" />
+              Código de Barras
+            </Button>
+            <Button
+              variant={scanMode === 'ingredients' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setScanMode('ingredients')}
+              className={`flex-1 ${scanMode === 'ingredients' 
+                ? 'bg-emerald-600 hover:bg-emerald-700' 
+                : 'border-white/20 text-white hover:bg-white/10'
+              }`}
+            >
+              <FileImage className="mr-2 h-4 w-4" />
+              Ingredientes
+            </Button>
           </div>
-        ) : (
-          <div className="relative">
-            {cameraError ? (
-              <div className="aspect-[4/3] bg-destructive/10 flex flex-col items-center justify-center p-8 text-center">
-                <div className="text-destructive mb-4">
-                  <Camera className="h-16 w-16 mx-auto mb-2" />
-                  <p className="font-bold">{cameraError}</p>
-                </div>
-                <Button onClick={startCamera} variant="outline">
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Reintentar
-                </Button>
-              </div>
-            ) : (
-              <>
-                <video
-                  ref={videoRef}
-                  className="w-full aspect-[4/3] object-cover"
-                  autoPlay
-                  playsInline
-                  muted
-                />
-                
-                {/* Scanning overlay */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="border-2 border-primary bg-primary/10 rounded-lg p-4">
-                    <div className="w-48 h-36 border-2 border-primary border-dashed rounded-lg flex items-center justify-center">
-                      {scanMode === 'barcode' ? (
-                        <BarChart3 className="h-8 w-8 text-primary" />
-                      ) : (
-                        <Camera className="h-8 w-8 text-primary" />
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Capture button */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                  <Button
-                    onClick={captureImage}
-                    size="lg"
-                    className="rounded-full h-16 w-16 p-0"
-                    disabled={isAnalyzing}
-                  >
-                    <Zap className="h-6 w-6" />
-                  </Button>
-                </div>
-
-                {/* Analyzing overlay */}
-                {isAnalyzing && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <div className="bg-white rounded-lg p-4 text-center">
-                      <div className="animate-spin mb-2">
-                        <Zap className="h-8 w-8 mx-auto text-primary" />
-                      </div>
-                      <p className="text-sm font-medium">Analizando...</p>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-      </Card>
-
-      {/* Instructions */}
-      <Card className="p-4 bg-accent/10">
-        <div className="text-center">
-          <h4 className="font-bold mb-1">
-            {scanMode === 'barcode' ? '📱 Código de Barras' : '📷 Ingredientes'}
-          </h4>
-          <p className="text-sm text-muted-foreground">
-            {scanMode === 'barcode'
-              ? 'Centra el código en el recuadro y espera a que lo detecte automáticamente'
-              : 'Asegúrate de que se lean bien todos los ingredientes en la foto'
+          <div className="text-xs text-slate-400 text-center">
+            {scanMode === 'barcode' 
+              ? 'Escanea el código de barras del producto' 
+              : 'Fotografía la lista de ingredientes'
             }
-          </p>
+          </div>
         </div>
       </Card>
 
+      {/* Camera Section */}
+      <Card className="p-4 bg-black/30 backdrop-blur-xl border border-white/20">
+        <div className="space-y-4">
+          {!isCameraActive ? (
+            <div className="text-center space-y-4">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-blue-400/20 rounded-full blur-xl"></div>
+                <Camera className="h-16 w-16 mx-auto text-emerald-400 relative z-10" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  {scanMode === 'barcode' ? 'Escanear Código de Barras' : 'Fotografiar Ingredientes'}
+                </h3>
+                <p className="text-slate-300 text-sm mb-4">
+                  {scanMode === 'barcode' 
+                    ? 'Activa la cámara para escanear el código de barras del producto'
+                    : 'Activa la cámara para fotografiar la lista de ingredientes'
+                  }
+                </p>
+              </div>
+              <Button 
+                onClick={startCamera}
+                className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 font-bold"
+                size="lg"
+              >
+                <Camera className="mr-2 h-5 w-5" />
+                Activar Cámara
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="relative rounded-lg overflow-hidden bg-black">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-64 object-cover"
+                />
+                <div className="absolute inset-0 border-2 border-emerald-400/50 rounded-lg pointer-events-none">
+                  <div className="absolute top-4 left-4">
+                    <Badge variant="secondary" className="bg-black/70 text-emerald-400 border-emerald-400/50">
+                      <Zap className="mr-1 h-3 w-3" />
+                      {scanMode === 'barcode' ? 'Código de Barras' : 'Ingredientes'}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  onClick={capturePhoto}
+                  disabled={isLoading}
+                  className="flex-1 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 font-bold"
+                  size="lg"
+                >
+                  {isLoading ? (
+                    <>
+                      <RotateCcw className="mr-2 h-5 w-5 animate-spin" />
+                      Analizando...
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="mr-2 h-5 w-5" />
+                      Capturar
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={stopCamera}
+                  className="border-white/20 text-white hover:bg-white/10"
+                >
+                  Detener
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* File Upload Alternative */}
+      <Card className="p-4 bg-black/30 backdrop-blur-xl border border-white/20">
+        <div className="text-center space-y-3">
+          <Upload className="h-8 w-8 mx-auto text-slate-400" />
+          <div>
+            <h3 className="font-medium text-white">Subir desde Galería</h3>
+            <p className="text-sm text-slate-400">
+              {scanMode === 'barcode' 
+                ? 'Sube una foto del código de barras' 
+                : 'Sube una foto de los ingredientes'
+              }
+            </p>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <Button 
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isLoading}
+            className="w-full border-white/20 text-white hover:bg-white/10"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Seleccionar Archivo
+          </Button>
+        </div>
+      </Card>
+
+      {/* Error Display */}
+      {error && (
+        <Card className="p-4 bg-red-900/30 backdrop-blur-xl border border-red-500/50">
+          <p className="text-red-200 text-sm text-center">{error}</p>
+        </Card>
+      )}
+
+      {/* Hidden canvas for photo capture */}
       <canvas ref={canvasRef} className="hidden" />
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileUpload}
-        className="hidden"
-      />
     </div>
   );
 };
