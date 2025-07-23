@@ -186,35 +186,58 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
         <div className="w-20"></div>
       </div>
 
-      {/* Grade Scale Legend */}
+      {/* Grade Scale Legend - Cleaner, more compact design like the first image */}
       <Card className="p-4 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-xl">
-        <div className="flex items-center justify-center gap-4 text-sm">
-          <span className="text-white/60">Escala de calificación:</span>
-          <div className="flex items-center gap-3">
-            <span className="text-emerald-300">😍A</span>
-            <span className="text-blue-300">😊B</span>
-            <span className="text-slate-300">😐C</span>
-            <span className="text-orange-300">😟D</span>
-            <span className="text-red-300">🤢E</span>
+        <div className="space-y-3">
+          <h3 className="text-center text-white/90 font-semibold">Escala de Calificación</h3>
+          
+          {/* Emoji Row - smaller and more compact */}
+          <div className="flex items-center justify-center gap-4">
+            <div className="text-2xl">😍</div>
+            <div className="text-2xl">😊</div>
+            <div className="text-2xl">😐</div>
+            <div className="text-2xl">😟</div>
+            <div className="text-2xl">🤢</div>
+          </div>
+          
+          {/* Grade Letters Row - smaller boxes, more compact */}
+          <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center w-8 h-8 bg-green-500 rounded-lg">
+              <span className="text-white font-bold text-sm">A</span>
+            </div>
+            <div className="flex items-center justify-center w-8 h-8 bg-blue-500 rounded-lg">
+              <span className="text-white font-bold text-sm">B</span>
+            </div>
+            <div className="flex items-center justify-center w-8 h-8 bg-yellow-500 rounded-lg">
+              <span className="text-white font-bold text-sm">C</span>
+            </div>
+            <div className="flex items-center justify-center w-8 h-8 bg-orange-500 rounded-lg">
+              <span className="text-white font-bold text-sm">D</span>
+            </div>
+            <div className="flex items-center justify-center w-8 h-8 bg-red-500 rounded-lg">
+              <span className="text-white font-bold text-sm">E</span>
+            </div>
           </div>
         </div>
       </Card>
 
-      {/* Product Info */}
+      {/* Product Info - Centered */}
       {analysis.productName && (
         <Card className="p-6 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-xl">
-          <div className="space-y-3">
+          <div className="space-y-3 text-center">
             <h3 className="font-semibold text-white/90 text-xl">{analysis.productName}</h3>
             {analysis.barcode && (
               <p className="text-sm text-white/50 font-mono">Código: {analysis.barcode}</p>
             )}
-            <Badge className="bg-white/10 text-white/80 border-white/20 rounded-full px-3 py-1">
-              {analysis.productType === 'Food' ? 'Alimento' :
-               analysis.productType === 'Makeup' ? 'Maquillaje' :
-               analysis.productType === 'Cream' ? 'Crema' :
-               analysis.productType === 'Oil' ? 'Aceite' :
-               analysis.productType === 'Toothpaste' ? 'Pasta Dental' : 'Otro'}
-            </Badge>
+            <div className="flex justify-center">
+              <Badge className="bg-white/10 text-white/80 border-white/20 rounded-full px-3 py-1">
+                {analysis.productType === 'Food' ? 'Alimento' :
+                 analysis.productType === 'Makeup' ? 'Maquillaje' :
+                 analysis.productType === 'Cream' ? 'Crema' :
+                 analysis.productType === 'Oil' ? 'Aceite' :
+                 analysis.productType === 'Toothpaste' ? 'Pasta Dental' : 'Otro'}
+              </Badge>
+            </div>
           </div>
         </Card>
       )}

@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Camera, Shield, Info, User, Mail, Eye } from "lucide-react";
+import { Camera, Shield, Info, Eye, User, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import CameraScanner from "@/components/CameraScanner";
 import ProductGrader from "@/components/ProductGrader";
 import OnboardingModal from "@/components/OnboardingModal";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 type AppState = 'welcome' | 'camera' | 'grading';
 
@@ -154,7 +154,7 @@ const Index = () => {
                 <div className="text-center">
                   <div className="text-2xl mb-2">🦷</div>
                   <p className="text-sm font-medium text-white">Cuidado Bucal</p>
-                  <p className="text-xs text-slate-400">Pasta dental, enjuague</p>
+                  <p className="text-xs text-slate-400">Pasta de dientes, enjuague</p>
                 </div>
               </Card>
             </div>
@@ -165,22 +165,37 @@ const Index = () => {
                 <div className="text-sm">
                   <p className="font-semibold mb-1 text-white">Cómo funciona</p>
                   <p className="text-slate-300">
-                    El análisis con IA califica productos de A (excelente) a E (evitar). 
+                    El análisis de IA califica productos de A (excelente) a E (evitar). 
                     Verificamos carcinógenos, alérgenos, ingredientes prohibidos y toxicidad.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Grade Legend */}
+            {/* Grade Legend - Fixed Vertical Alignment */}
             <div className="bg-black/20 backdrop-blur-xl p-4 rounded-lg border border-white/10">
               <p className="text-center text-sm font-semibold text-white mb-3">Escala de Calificación</p>
-              <div className="flex justify-center gap-2 text-xs">
-                <span className="px-2 py-1 rounded bg-green-600/80 text-white">😍 A</span>
-                <span className="px-2 py-1 rounded bg-green-500/80 text-white">😊 B</span>
-                <span className="px-2 py-1 rounded bg-yellow-500/80 text-black">😐 C</span>
-                <span className="px-2 py-1 rounded bg-orange-500/80 text-white">😟 D</span>
-                <span className="px-2 py-1 rounded bg-red-600/80 text-white">🤢 E</span>
+              <div className="flex justify-center gap-4 text-xs">
+                <div className="flex flex-col items-center">
+                  <span className="text-lg mb-1">😍</span>
+                  <span className="px-2 py-1 rounded bg-green-600/80 text-white font-bold">A</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-lg mb-1">😊</span>
+                  <span className="px-2 py-1 rounded bg-green-500/80 text-white font-bold">B</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-lg mb-1">😐</span>
+                  <span className="px-2 py-1 rounded bg-yellow-500/80 text-black font-bold">C</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-lg mb-1">😟</span>
+                  <span className="px-2 py-1 rounded bg-orange-500/80 text-white font-bold">D</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-lg mb-1">🤢</span>
+                  <span className="px-2 py-1 rounded bg-red-600/80 text-white font-bold">E</span>
+                </div>
               </div>
             </div>
           </div>
