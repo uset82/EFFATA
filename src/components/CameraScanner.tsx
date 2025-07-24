@@ -94,11 +94,119 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
     }
   };
 
-  useEffect(() => {
-    return () => {
-      stopCamera();
-    };
-  }, [stopCamera]);
+  // Add the enhanced thinking screen when loading
+  if (isLoading) {
+    return (
+      <div className="space-y-6 mt-4">
+        <div className="flex items-center justify-between">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={onBack}
+            className="border border-white/20 text-white hover:bg-white/10 backdrop-blur-xl bg-black/20 rounded-full px-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Atrás
+          </Button>
+          <h2 className="text-xl font-semibold text-white/90">Analizando</h2>
+          <div className="w-20"></div>
+        </div>
+
+        <Card className="p-8 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl">
+          <div className="text-center space-y-8">
+            {/* EFFATA Logo/Brand with thinking animation */}
+            <div className="relative">
+              {/* Outer rotating rings */}
+              <div className="absolute inset-0 w-32 h-32 mx-auto">
+                <div className="absolute inset-0 border-4 border-transparent border-t-emerald-400 border-r-blue-400 rounded-full animate-spin"></div>
+                <div className="absolute inset-2 border-3 border-transparent border-b-purple-400 border-l-pink-400 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '3s'}}></div>
+              </div>
+              
+              {/* Pulsing background glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 via-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+              
+              {/* EFFATA Brand Circle */}
+              <div className="relative z-10 w-32 h-32 mx-auto flex items-center justify-center bg-gradient-to-br from-emerald-500/20 to-blue-500/20 backdrop-blur-sm rounded-full border border-white/20">
+                <div className="text-center">
+                  <div className="text-2xl font-black text-white mb-1">EFFATA</div>
+                  <div className="text-xs text-white/60 font-medium">AI THINKING</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Enhanced thinking text with EFFATA branding */}
+            <div className="space-y-4">
+              <h3 className="text-3xl font-bold text-white/90">
+                🧠 EFFATA Pensando
+                <span className="inline-flex ml-2">
+                  <span className="animate-bounce delay-0 text-emerald-400">.</span>
+                  <span className="animate-bounce delay-100 text-blue-400">.</span>
+                  <span className="animate-bounce delay-200 text-purple-400">.</span>
+                </span>
+              </h3>
+              <p className="text-white/70 text-lg">
+                Nuestra IA está analizando cada ingrediente para darte el mejor consejo de salud
+              </p>
+            </div>
+            
+            {/* Enhanced progress with animated steps */}
+            <div className="space-y-6">
+              {/* Main progress bar */}
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm text-white/60">
+                  <span>Procesando con IA...</span>
+                  <span>🤖</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-4 overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 rounded-full animate-pulse relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Animated thinking steps */}
+              <div className="grid grid-cols-1 gap-4 text-sm">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span className="text-white/80">Leyendo etiqueta del producto</span>
+                  </div>
+                  <span className="text-emerald-400">✓</span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse delay-300"></div>
+                    <span className="text-white/80">Analizando ingredientes con IA</span>
+                  </div>
+                  <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10 opacity-60">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse delay-500"></div>
+                    <span className="text-white/60">Calculando riesgo para tu salud</span>
+                  </div>
+                  <span className="text-white/40">⏳</span>
+                </div>
+              </div>
+              
+              {/* Fun fact while waiting */}
+              <div className="mt-8 p-4 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-xl border border-white/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">💡</span>
+                  <span className="text-white/80 font-medium">¿Sabías que...</span>
+                </div>
+                <p className="text-white/60 text-sm">
+                  EFFATA analiza más de 1000 ingredientes diferentes para darte la calificación más precisa
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 mt-4">

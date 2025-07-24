@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft, Camera, AlertTriangle, CheckCircle, Info, Star, Shield, Zap, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,23 +16,23 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
   const [analysis, setAnalysis] = useState<IngredientAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Spanish grade results with proper Spain Spanish
+  // Spanish grade results with colors matching the grading scale
   const gradeResults = {
     A: {
       emoji: "😍",
       title: "¡Estupendo, amigo!",
       message: "Es excelente",
-      gradient: "from-emerald-400/30 via-green-500/20 to-emerald-600/30",
-      glowColor: "shadow-emerald-500/25",
-      borderGlow: "shadow-[0_0_30px_rgba(16,185,129,0.3)]",
-      iconColor: "text-emerald-300",
-      scoreColor: "text-emerald-100"
+      gradient: "from-green-400/30 via-green-500/20 to-green-600/30",
+      glowColor: "shadow-green-500/25",
+      borderGlow: "shadow-[0_0_30px_rgba(34,197,94,0.3)]",
+      iconColor: "text-green-300",
+      scoreColor: "text-green-100"
     },
     B: {
       emoji: "😊", 
       title: "Está muy bien",
       message: "Adelante con ello",
-      gradient: "from-blue-400/30 via-cyan-500/20 to-blue-600/30",
+      gradient: "from-blue-400/30 via-blue-500/20 to-blue-600/30",
       glowColor: "shadow-blue-500/25",
       borderGlow: "shadow-[0_0_30px_rgba(59,130,246,0.3)]",
       iconColor: "text-blue-300",
@@ -42,17 +42,17 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
       emoji: "😐",
       title: "Regular...",
       message: "Considéralo con cuidado",
-      gradient: "from-slate-400/30 via-slate-500/20 to-slate-600/30",
-      glowColor: "shadow-slate-500/25",
-      borderGlow: "shadow-[0_0_30px_rgba(100,116,139,0.3)]",
-      iconColor: "text-slate-300",
-      scoreColor: "text-slate-100"
+      gradient: "from-yellow-400/30 via-yellow-500/20 to-yellow-600/30",
+      glowColor: "shadow-yellow-500/25",
+      borderGlow: "shadow-[0_0_30px_rgba(234,179,8,0.3)]",
+      iconColor: "text-yellow-300",
+      scoreColor: "text-yellow-100"
     },
     D: {
       emoji: "😟",
       title: "Algo flojo...",
       message: "Te recomendamos buscar otra opción",
-      gradient: "from-orange-400/30 via-amber-500/20 to-orange-600/30",
+      gradient: "from-orange-400/30 via-orange-500/20 to-orange-600/30",
       glowColor: "shadow-orange-500/25",
       borderGlow: "shadow-[0_0_30px_rgba(249,115,22,0.3)]",
       iconColor: "text-orange-300",
@@ -62,7 +62,7 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
       emoji: "🤢",
       title: "¡Evítalo!",
       message: "Mejor alejarte de esto",
-      gradient: "from-red-400/30 via-rose-500/20 to-red-600/30",
+      gradient: "from-red-400/30 via-red-500/20 to-red-600/30",
       glowColor: "shadow-red-500/25",
       borderGlow: "shadow-[0_0_30px_rgba(239,68,68,0.3)]",
       iconColor: "text-red-300",
@@ -82,6 +82,8 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
       try {
         setIsLoading(true);
         const parsedData = JSON.parse(productData);
+        
+        // Remove the delay - process immediately
         setAnalysis(parsedData);
       } catch (error) {
         console.error('Error procesando datos del producto:', error);
@@ -106,23 +108,99 @@ const ProductGrader = ({ productData, onBack, onScanAgain }: ProductGraderProps)
             <ArrowLeft className="mr-2 h-4 w-4" />
             Atrás
           </Button>
-          <h2 className="text-xl font-semibold text-white/90">Analizando...</h2>
+          <h2 className="text-xl font-semibold text-white/90">Analizando</h2>
           <div className="w-20"></div>
         </div>
 
         <Card className="p-8 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl">
-          <div className="text-center space-y-6">
+          <div className="text-center space-y-8">
+            {/* EFFATA Logo/Brand with thinking animation */}
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-blue-400/20 rounded-full blur-2xl"></div>
-              <Sparkles className="h-20 w-20 mx-auto text-emerald-400 animate-pulse relative z-10" />
+              {/* Outer rotating rings */}
+              <div className="absolute inset-0 w-32 h-32 mx-auto">
+                <div className="absolute inset-0 border-4 border-transparent border-t-emerald-400 border-r-blue-400 rounded-full animate-spin"></div>
+                <div className="absolute inset-2 border-3 border-transparent border-b-purple-400 border-l-pink-400 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '3s'}}></div>
+              </div>
+              
+              {/* Pulsing background glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 via-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+              
+              {/* EFFATA Brand Circle */}
+              <div className="relative z-10 w-32 h-32 mx-auto flex items-center justify-center bg-gradient-to-br from-emerald-500/20 to-blue-500/20 backdrop-blur-sm rounded-full border border-white/20">
+                <div className="text-center">
+                  <div className="text-2xl font-black text-white mb-1">EFFATA</div>
+                  <div className="text-xs text-white/60 font-medium">AI THINKING</div>
+                </div>
+              </div>
             </div>
-            <div className="space-y-3">
-              <h3 className="text-2xl font-semibold text-white/90">Analizando Producto</h3>
-              <p className="text-white/60 text-lg">La IA está evaluando la seguridad y salud del producto...</p>
+            
+            {/* Enhanced thinking text with EFFATA branding */}
+            <div className="space-y-4">
+              <h3 className="text-3xl font-bold text-white/90">
+                🧠 EFFATA Pensando
+                <span className="inline-flex ml-2">
+                  <span className="animate-bounce delay-0 text-emerald-400">.</span>
+                  <span className="animate-bounce delay-100 text-blue-400">.</span>
+                  <span className="animate-bounce delay-200 text-purple-400">.</span>
+                </span>
+              </h3>
+              <p className="text-white/70 text-lg">
+                Nuestra IA está analizando cada ingrediente para darte el mejor consejo de salud
+              </p>
             </div>
-            <div className="space-y-2">
-              <Progress value={75} className="w-full h-2 bg-white/10" />
-              <p className="text-white/40 text-sm">Procesando ingredientes...</p>
+            
+            {/* Enhanced progress with animated steps */}
+            <div className="space-y-6">
+              {/* Main progress bar */}
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm text-white/60">
+                  <span>Procesando con IA...</span>
+                  <span>🤖</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-4 overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 rounded-full animate-pulse relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Animated thinking steps */}
+              <div className="grid grid-cols-1 gap-4 text-sm">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span className="text-white/80">Leyendo etiqueta del producto</span>
+                  </div>
+                  <span className="text-emerald-400">✓</span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse delay-300"></div>
+                    <span className="text-white/80">Analizando ingredientes con IA</span>
+                  </div>
+                  <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10 opacity-60">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse delay-500"></div>
+                    <span className="text-white/60">Calculando riesgo para tu salud</span>
+                  </div>
+                  <span className="text-white/40">⏳</span>
+                </div>
+              </div>
+              
+              {/* Fun fact while waiting */}
+              <div className="mt-8 p-4 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-xl border border-white/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">💡</span>
+                  <span className="text-white/80 font-medium">¿Sabías que...</span>
+                </div>
+                <p className="text-white/60 text-sm">
+                  EFFATA analiza más de 1000 ingredientes diferentes para darte la calificación más precisa
+                </p>
+              </div>
             </div>
           </div>
         </Card>
