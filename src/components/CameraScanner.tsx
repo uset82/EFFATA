@@ -16,6 +16,7 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
   const [scanMode, setScanMode] = useState<'barcode' | 'ingredients'>('barcode');
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -36,13 +37,14 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
     try {
       setError(null);
       setCameraError(null);
+      setIsVideoReady(false);
       
       // Check if camera is available
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Camera not supported');
       }
 
-      // Enhanced mobile camera configuration
+      // Enhanced mobile camera configuration for iOS
       const constraints = {
         video: {
           facingMode: 'environment', // Use back camera
@@ -63,13 +65,66 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         
-        // Wait for video to load metadata
-        videoRef.current.onloadedmetadata = () => {
-          console.log('Video metadata loaded:', {
-            width: videoRef.current?.videoWidth,
-            height: videoRef.current?.videoHeight
-          });
-        };
+        // Enhanced iOS video loading with promises
+        return new Promise<void>((resolve, reject) => {
+          const video = videoRef.current!;
+          
+          const onLoadedMetadata = () => {
+            console.log('Video metadata loaded:', {
+              width: video.videoWidth,
+              height: video.videoHeight,
+              readyState: video.readyState
+            });
+            
+            // Ensure video is actually ready to play
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+              setIsVideoReady(true);
+              resolve();
+            } else {
+              // Wait a bit more for iOS
+              setTimeout(() => {
+                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                  setIsVideoReady(true);
+                  resolve();
+                } else {
+                  reject(new Error('Video dimensions not available'));
+                }
+              }, 500);
+            }
+          };
+          
+          const onCanPlay = () => {
+            console.log('Video can play, ready state:', video.readyState);
+            // Additional check for iOS
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+              setIsVideoReady(true);
+              resolve();
+            }
+          };
+          
+          const onError = (e: any) => {
+            console.error('Video error:', e);
+            reject(new Error('Video loading failed'));
+          };
+          
+          // Set up event listeners
+          video.addEventListener('loadedmetadata', onLoadedMetadata, { once: true });
+          video.addEventListener('canplay', onCanPlay, { once: true });
+          video.addEventListener('error', onError, { once: true });
+          
+          // Force play for iOS (required for camera access)
+          video.play().catch(console.error);
+          
+          // Timeout fallback
+          setTimeout(() => {
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+              setIsVideoReady(true);
+              resolve();
+            } else {
+              reject(new Error('Video loading timeout'));
+            }
+          }, 3000);
+        });
       }
     } catch (err: any) {
       console.error('Error accediendo a la cámara:', err);
@@ -98,6 +153,7 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
       cameraStream.getTracks().forEach(track => track.stop());
       setCameraStream(null);
       setIsCameraActive(false);
+      setIsVideoReady(false);
     }
   }, [cameraStream]);
 
@@ -116,20 +172,45 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
       return;
     }
 
-    // Ensure video has loaded
-    if (video.videoWidth === 0 || video.videoHeight === 0) {
-      setError('Error: El video no está listo. Espera un momento e inténtalo de nuevo.');
+    // Enhanced iOS video ready check with retry mechanism
+    const waitForVideoReady = async (maxAttempts = 5): Promise<boolean> => {
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        if (video.videoWidth > 0 && video.videoHeight > 0 && video.readyState >= 2) {
+          return true;
+        }
+        
+        console.log(`Attempt ${attempt + 1}: Video not ready, waiting...`, {
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight,
+          readyState: video.readyState
+        });
+        
+        // Wait 200ms between attempts
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+      return false;
+    };
+
+    const isVideoReadyNow = await waitForVideoReady();
+    
+    if (!isVideoReadyNow) {
+      setError('Error: El video no está listo. Por favor espera un momento y asegúrate de que la cámara esté funcionando correctamente.');
       return;
     }
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0);
+    try {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0);
 
-    const imageData = canvas.toDataURL('image/jpeg', 0.8);
-    console.log('Image captured, size:', imageData.length);
-    
-    await handleImageAnalysis(imageData);
+      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      console.log('Image captured successfully, size:', imageData.length);
+      
+      await handleImageAnalysis(imageData);
+    } catch (err) {
+      console.error('Error capturing photo:', err);
+      setError('Error capturando la foto. Por favor inténtalo de nuevo.');
+    }
   }, []);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -440,14 +521,23 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
               <div className="flex gap-2">
                 <Button 
                   onClick={capturePhoto}
-                  disabled={isLoading}
-                  className="flex-1 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 font-bold"
+                  disabled={isLoading || !isVideoReady}
+                  className={`flex-1 font-bold ${
+                    isVideoReady 
+                      ? 'bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700' 
+                      : 'bg-gray-600 cursor-not-allowed'
+                  }`}
                   size="lg"
                 >
                   {isLoading ? (
                     <>
                       <RotateCcw className="mr-2 h-5 w-5 animate-spin" />
                       Analizando...
+                    </>
+                  ) : !isVideoReady ? (
+                    <>
+                      <RotateCcw className="mr-2 h-5 w-5 animate-spin" />
+                      Preparando cámara...
                     </>
                   ) : (
                     <>
@@ -464,6 +554,21 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
                   Detener
                 </Button>
               </div>
+              
+              {/* Video ready indicator for iOS */}
+              {isCameraActive && (
+                <div className="text-center">
+                  {isVideoReady ? (
+                    <p className="text-emerald-400 text-sm">
+                      ✅ Cámara lista - Puedes capturar la imagen
+                    </p>
+                  ) : (
+                    <p className="text-yellow-400 text-sm">
+                      ⏳ Preparando cámara... Espera un momento
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
