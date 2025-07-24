@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Camera, Upload, ArrowLeft, RotateCcw, Zap, ScanLine, FileImage } from "lucide-react";
+import { Camera, Upload, ArrowLeft, RotateCcw, Zap, ScanLine, FileImage, AlertCircle, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,31 +16,82 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
   const [scanMode, setScanMode] = useState<'barcode' | 'ingredients'>('barcode');
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(userAgent);
+      setIsMobile(isMobileDevice);
+    };
+    checkMobile();
+  }, []);
+
   const startCamera = useCallback(async () => {
     try {
       setError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        } 
-      });
+      setCameraError(null);
+      
+      // Check if camera is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera not supported');
+      }
+
+      // Enhanced mobile camera configuration
+      const constraints = {
+        video: {
+          facingMode: 'environment', // Use back camera
+          width: isMobile ? { ideal: 1280, max: 1920 } : { ideal: 1920 },
+          height: isMobile ? { ideal: 720, max: 1080 } : { ideal: 1080 },
+          aspectRatio: isMobile ? 16/9 : undefined,
+          frameRate: { ideal: 30, max: 60 }
+        },
+        audio: false
+      };
+
+      console.log('Requesting camera with constraints:', constraints);
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
       setCameraStream(stream);
       setIsCameraActive(true);
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        
+        // Wait for video to load metadata
+        videoRef.current.onloadedmetadata = () => {
+          console.log('Video metadata loaded:', {
+            width: videoRef.current?.videoWidth,
+            height: videoRef.current?.videoHeight
+          });
+        };
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error accediendo a la cámara:', err);
-      setError('No se pudo acceder a la cámara. Por favor verifica los permisos o usa la opción de subir archivo.');
+      
+      let errorMessage = 'No se pudo acceder a la cámara.';
+      
+      if (err.name === 'NotAllowedError') {
+        errorMessage = '❌ Permisos de cámara denegados. Por favor permite el acceso a la cámara en tu navegador.';
+      } else if (err.name === 'NotFoundError') {
+        errorMessage = '📷 No se encontró cámara en tu dispositivo.';
+      } else if (err.name === 'NotSupportedError') {
+        errorMessage = '🚫 Tu navegador no soporta acceso a la cámara.';
+      } else if (err.name === 'NotReadableError') {
+        errorMessage = '⚠️ La cámara está siendo usada por otra aplicación.';
+      } else if (err.message === 'Camera not supported') {
+        errorMessage = '📱 Tu dispositivo no soporta acceso a la cámara desde el navegador.';
+      }
+      
+      setCameraError(errorMessage);
+      setError(`${errorMessage} Usa la opción "Subir desde Galería" como alternativa.`);
     }
-  }, []);
+  }, [isMobile]);
 
   const stopCamera = useCallback(() => {
     if (cameraStream) {
@@ -51,44 +102,82 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
   }, [cameraStream]);
 
   const capturePhoto = useCallback(async () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current) {
+      setError('Error: No se pudo acceder al video o canvas');
+      return;
+    }
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
-    if (!context) return;
+    if (!context) {
+      setError('Error: No se pudo obtener contexto del canvas');
+      return;
+    }
+
+    // Ensure video has loaded
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      setError('Error: El video no está listo. Espera un momento e inténtalo de nuevo.');
+      return;
+    }
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0);
 
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    console.log('Image captured, size:', imageData.length);
+    
     await handleImageAnalysis(imageData);
-  }, [scanMode]);
+  }, []);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Por favor selecciona un archivo de imagen válido.');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('El archivo es muy grande. Por favor selecciona una imagen menor a 10MB.');
+      return;
+    }
+
     try {
+      console.log('Processing file:', file.name, file.size, file.type);
       const imageData = await convertFileToBase64(file);
       await handleImageAnalysis(imageData);
     } catch (err) {
+      console.error('Error processing file:', err);
       setError('Error procesando el archivo. Por favor inténtalo de nuevo.');
     }
-  }, [scanMode]);
+  }, []);
 
   const handleImageAnalysis = async (imageData: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
+      console.log('Starting image analysis with mode:', scanMode);
       const analysis = await analyzeProductImage(imageData, scanMode);
+      console.log('Analysis completed:', analysis);
       onScanComplete(JSON.stringify(analysis));
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error en análisis:', err);
-      setError('Error analizando la imagen. Por favor asegúrate de que la imagen sea clara e inténtalo de nuevo.');
+      
+      let errorMessage = 'Error analizando la imagen.';
+      if (err.message.includes('API')) {
+        errorMessage = 'Error de conexión con el servicio de análisis. Verifica tu conexión a internet.';
+      } else if (err.message.includes('JSON')) {
+        errorMessage = 'Error procesando la respuesta del análisis. Inténtalo de nuevo.';
+      }
+      
+      setError(`${errorMessage} Por favor asegúrate de que la imagen sea clara e inténtalo de nuevo.`);
     } finally {
       setIsLoading(false);
     }
@@ -225,6 +314,18 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
         <div className="w-20"></div>
       </div>
 
+      {/* Mobile Detection Info */}
+      {isMobile && (
+        <Card className="p-3 bg-blue-900/30 backdrop-blur-xl border border-blue-500/50">
+          <div className="flex items-center gap-2">
+            <Smartphone className="h-4 w-4 text-blue-400" />
+            <p className="text-blue-200 text-sm">
+              📱 Dispositivo móvil detectado - Optimizado para tu teléfono
+            </p>
+          </div>
+        </Card>
+      )}
+
       {/* Scan Mode Toggle */}
       <Card className="p-4 bg-black/30 backdrop-blur-xl border border-white/20">
         <div className="space-y-3">
@@ -283,6 +384,11 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
                     : 'Activa la cámara para fotografiar la lista de ingredientes'
                   }
                 </p>
+                {isMobile && (
+                  <p className="text-yellow-300 text-xs mb-4">
+                    💡 En móviles, asegúrate de permitir el acceso a la cámara cuando te lo solicite
+                  </p>
+                )}
               </div>
               <Button 
                 onClick={startCamera}
@@ -292,6 +398,16 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
                 <Camera className="mr-2 h-5 w-5" />
                 Activar Cámara
               </Button>
+              
+              {/* Camera error display */}
+              {cameraError && (
+                <div className="mt-4 p-3 bg-red-900/30 backdrop-blur-xl border border-red-500/50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-400" />
+                    <p className="text-red-200 text-sm">{cameraError}</p>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -310,6 +426,14 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
                       {scanMode === 'barcode' ? 'Código de Barras' : 'Ingredientes'}
                     </Badge>
                   </div>
+                  {isMobile && (
+                    <div className="absolute top-4 right-4">
+                      <Badge variant="secondary" className="bg-black/70 text-blue-400 border-blue-400/50">
+                        <Smartphone className="mr-1 h-3 w-3" />
+                        Móvil
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -345,7 +469,7 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
         </div>
       </Card>
 
-      {/* File Upload Alternative */}
+      {/* File Upload Alternative - Enhanced for mobile */}
       <Card className="p-4 bg-black/30 backdrop-blur-xl border border-white/20">
         <div className="text-center space-y-3">
           <Upload className="h-8 w-8 mx-auto text-slate-400" />
@@ -357,11 +481,17 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
                 : 'Sube una foto de los ingredientes'
               }
             </p>
+            {isMobile && (
+              <p className="text-emerald-300 text-xs mt-1">
+                ⭐ Recomendado para móviles - Más fácil y confiable
+              </p>
+            )}
           </div>
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            capture={isMobile ? "environment" : undefined}
             onChange={handleFileUpload}
             className="hidden"
           />
@@ -380,7 +510,10 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
       {/* Error Display */}
       {error && (
         <Card className="p-4 bg-red-900/30 backdrop-blur-xl border border-red-500/50">
-          <p className="text-red-200 text-sm text-center">{error}</p>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-red-400" />
+            <p className="text-red-200 text-sm">{error}</p>
+          </div>
         </Card>
       )}
 
