@@ -44,19 +44,19 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
         throw new Error('Camera not supported');
       }
 
-      // Enhanced mobile camera configuration for iOS
+      // iOS Safari optimized camera configuration
       const constraints = {
         video: {
           facingMode: 'environment', // Use back camera
-          width: isMobile ? { ideal: 1280, max: 1920 } : { ideal: 1920 },
-          height: isMobile ? { ideal: 720, max: 1080 } : { ideal: 1080 },
-          aspectRatio: isMobile ? 16/9 : undefined,
-          frameRate: { ideal: 30, max: 60 }
+          width: isMobile ? { ideal: 1280, min: 640, max: 1920 } : { ideal: 1920 },
+          height: isMobile ? { ideal: 720, min: 480, max: 1080 } : { ideal: 1080 },
+          aspectRatio: isMobile ? { ideal: 16/9 } : undefined,
+          frameRate: { ideal: 30, min: 15, max: 60 }
         },
         audio: false
       };
 
-      console.log('Requesting camera with constraints:', constraints);
+      console.log('🎥 Requesting camera for iOS with constraints:', constraints);
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       
       setCameraStream(stream);
@@ -65,86 +65,112 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         
-        // Enhanced iOS video loading with promises
+        // Ultra-enhanced iOS video loading
         return new Promise<void>((resolve, reject) => {
           const video = videoRef.current!;
+          let resolved = false;
+          
+          const markAsReady = () => {
+            if (!resolved && video.videoWidth > 0 && video.videoHeight > 0) {
+              resolved = true;
+              setIsVideoReady(true);
+              console.log('✅ iOS camera ready:', {
+                width: video.videoWidth,
+                height: video.videoHeight,
+                readyState: video.readyState
+              });
+              resolve();
+            }
+          };
           
           const onLoadedMetadata = () => {
-            console.log('Video metadata loaded:', {
-              width: video.videoWidth,
-              height: video.videoHeight,
-              readyState: video.readyState
-            });
-            
-            // Ensure video is actually ready to play
-            if (video.videoWidth > 0 && video.videoHeight > 0) {
-              setIsVideoReady(true);
-              resolve();
-            } else {
-              // Wait a bit more for iOS
-              setTimeout(() => {
-                if (video.videoWidth > 0 && video.videoHeight > 0) {
-                  setIsVideoReady(true);
-                  resolve();
-                } else {
-                  reject(new Error('Video dimensions not available'));
-                }
-              }, 500);
-            }
+            console.log('📱 iOS video metadata loaded');
+            markAsReady();
           };
           
           const onCanPlay = () => {
-            console.log('Video can play, ready state:', video.readyState);
-            // Additional check for iOS
-            if (video.videoWidth > 0 && video.videoHeight > 0) {
-              setIsVideoReady(true);
-              resolve();
-            }
+            console.log('▶️ iOS video can play');
+            markAsReady();
+          };
+          
+          const onPlaying = () => {
+            console.log('🎬 iOS video is playing');
+            markAsReady();
+          };
+          
+          const onTimeUpdate = () => {
+            console.log('⏰ iOS video time update');
+            markAsReady();
           };
           
           const onError = (e: any) => {
-            console.error('Video error:', e);
-            reject(new Error('Video loading failed'));
+            console.error('❌ iOS video error:', e);
+            if (!resolved) {
+              resolved = true;
+              reject(new Error('Video loading failed on iOS'));
+            }
           };
           
-          // Set up event listeners
+          // Set up multiple event listeners for iOS Safari
           video.addEventListener('loadedmetadata', onLoadedMetadata, { once: true });
           video.addEventListener('canplay', onCanPlay, { once: true });
+          video.addEventListener('playing', onPlaying, { once: true });
+          video.addEventListener('timeupdate', onTimeUpdate, { once: true });
           video.addEventListener('error', onError, { once: true });
           
-          // Force play for iOS (required for camera access)
-          video.play().catch(console.error);
+          // Force attributes for iOS Safari
+          video.setAttribute('playsinline', 'true');
+          video.setAttribute('webkit-playsinline', 'true');
+          video.muted = true;
+          video.autoplay = true;
           
-          // Timeout fallback
-          setTimeout(() => {
-            if (video.videoWidth > 0 && video.videoHeight > 0) {
-              setIsVideoReady(true);
-              resolve();
-            } else {
-              reject(new Error('Video loading timeout'));
+          // Force play for iOS Safari
+          const forcePlay = async () => {
+            try {
+              await video.play();
+              console.log('🎯 iOS video play forced successfully');
+            } catch (playErr) {
+              console.error('⚠️ iOS video play failed:', playErr);
             }
-          }, 3000);
+          };
+          
+          // Multiple play attempts for iOS Safari
+          forcePlay();
+          setTimeout(forcePlay, 500);
+          setTimeout(forcePlay, 1000);
+          
+          // Extended timeout for iOS Safari
+          setTimeout(() => {
+            if (!resolved) {
+              if (video.videoWidth > 0 && video.videoHeight > 0) {
+                markAsReady();
+              } else {
+                resolved = true;
+                reject(new Error('iOS video loading timeout - dimensions not available'));
+              }
+            }
+          }, 8000); // Increased timeout for iOS Safari
         });
       }
     } catch (err: any) {
-      console.error('Error accediendo a la cámara:', err);
+      console.error('❌ Error accessing iOS camera:', err);
       
       let errorMessage = 'No se pudo acceder a la cámara.';
       
       if (err.name === 'NotAllowedError') {
-        errorMessage = '❌ Permisos de cámara denegados. Por favor permite el acceso a la cámara en tu navegador.';
+        errorMessage = '❌ Permisos de cámara denegados. En iOS, ve a Configuración > Safari > Cámara y permite el acceso.';
       } else if (err.name === 'NotFoundError') {
-        errorMessage = '📷 No se encontró cámara en tu dispositivo.';
+        errorMessage = '📷 No se encontró cámara en tu iPhone.';
       } else if (err.name === 'NotSupportedError') {
-        errorMessage = '🚫 Tu navegador no soporta acceso a la cámara.';
+        errorMessage = '🚫 Tu versión de iOS Safari no soporta acceso a la cámara.';
       } else if (err.name === 'NotReadableError') {
-        errorMessage = '⚠️ La cámara está siendo usada por otra aplicación.';
+        errorMessage = '⚠️ La cámara está siendo usada por otra aplicación. Cierra otras apps que usen la cámara.';
       } else if (err.message === 'Camera not supported') {
-        errorMessage = '📱 Tu dispositivo no soporta acceso a la cámara desde el navegador.';
+        errorMessage = '📱 Tu dispositivo no soporta acceso a la cámara desde Safari.';
       }
       
       setCameraError(errorMessage);
-      setError(`${errorMessage} Usa la opción "Subir desde Galería" como alternativa.`);
+      setError(`${errorMessage} 💡 Recomendación: Usa "Subir desde Galería" que funciona mejor en iPhone.`);
     }
   }, [isMobile]);
 
@@ -172,44 +198,99 @@ const CameraScanner = ({ onScanComplete, onBack }: CameraScannerProps) => {
       return;
     }
 
-    // Enhanced iOS video ready check with retry mechanism
-    const waitForVideoReady = async (maxAttempts = 5): Promise<boolean> => {
+    // Ultra-robust iOS Safari video ready check
+    const waitForVideoReady = async (maxAttempts = 15): Promise<boolean> => {
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        if (video.videoWidth > 0 && video.videoHeight > 0 && video.readyState >= 2) {
-          return true;
-        }
+        // Multiple checks for iOS Safari compatibility
+        const hasValidDimensions = video.videoWidth > 0 && video.videoHeight > 0;
+        const hasValidReadyState = video.readyState >= 2; // HAVE_CURRENT_DATA or higher
+        const isNotPaused = !video.paused;
+        const hasCurrentTime = video.currentTime > 0;
         
-        console.log(`Attempt ${attempt + 1}: Video not ready, waiting...`, {
+        console.log(`Attempt ${attempt + 1}:`, {
           videoWidth: video.videoWidth,
           videoHeight: video.videoHeight,
-          readyState: video.readyState
+          readyState: video.readyState,
+          paused: video.paused,
+          currentTime: video.currentTime,
+          hasValidDimensions,
+          hasValidReadyState,
+          isNotPaused,
+          hasCurrentTime
         });
         
-        // Wait 200ms between attempts
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // For iOS Safari, we need dimensions AND either good ready state OR current time
+        if (hasValidDimensions && (hasValidReadyState || hasCurrentTime)) {
+          // Additional iOS Safari check - try to draw a test frame
+          try {
+            const testCanvas = document.createElement('canvas');
+            testCanvas.width = 10;
+            testCanvas.height = 10;
+            const testContext = testCanvas.getContext('2d');
+            if (testContext) {
+              testContext.drawImage(video, 0, 0, 10, 10);
+              const testData = testCanvas.toDataURL();
+              if (testData && testData.length > 100) {
+                console.log('✅ Video is ready for capture');
+                return true;
+              }
+            }
+          } catch (testErr) {
+            console.log('Test draw failed:', testErr);
+          }
+        }
+        
+        // Progressive wait times for iOS Safari
+        const waitTime = attempt < 5 ? 300 : attempt < 10 ? 500 : 1000;
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        
+        // Try to trigger video play again for iOS Safari
+        if (attempt % 3 === 0) {
+          try {
+            await video.play();
+          } catch (playErr) {
+            console.log('Video play retry failed:', playErr);
+          }
+        }
       }
       return false;
     };
 
+    // Show loading state while waiting
+    setError('🔄 Preparando captura para iOS...');
+    
     const isVideoReadyNow = await waitForVideoReady();
     
     if (!isVideoReadyNow) {
-      setError('Error: El video no está listo. Por favor espera un momento y asegúrate de que la cámara esté funcionando correctamente.');
+      setError('❌ La cámara no está lista en iOS Safari. Por favor usa "Subir desde Galería" que funciona mejor en iPhone.');
       return;
     }
 
     try {
+      // Clear any previous errors
+      setError(null);
+      
+      // Set canvas dimensions to match video
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
+      
+      // Draw the video frame
       context.drawImage(video, 0, 0);
 
-      const imageData = canvas.toDataURL('image/jpeg', 0.8);
-      console.log('Image captured successfully, size:', imageData.length);
+      // Get image data with high quality for better analysis
+      const imageData = canvas.toDataURL('image/jpeg', 0.9);
+      
+      // Validate the captured image
+      if (!imageData || imageData.length < 1000) {
+        throw new Error('Captured image is too small or invalid');
+      }
+      
+      console.log('✅ Image captured successfully for iOS, size:', imageData.length);
       
       await handleImageAnalysis(imageData);
     } catch (err) {
-      console.error('Error capturing photo:', err);
-      setError('Error capturando la foto. Por favor inténtalo de nuevo.');
+      console.error('Error capturing photo on iOS:', err);
+      setError('❌ Error capturando en iOS Safari. Recomendamos usar "Subir desde Galería" para mejor compatibilidad.');
     }
   }, []);
 
